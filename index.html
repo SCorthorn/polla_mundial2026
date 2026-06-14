@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Polla Mundial MBA 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --accent: #f0b429;
+      --green: #238636;
+      --green-bg: #0d2e1a;
+      --green-text: #3fb950;
+      --yellow: #9e6a03;
+      --yellow-bg: #2d1f04;
+      --yellow-text: #d29922;
+      --red-bg: #2d0f0f;
+      --red-text: #f85149;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #1a2a1a 0%, #0d1f3c 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 20px;
+      text-align: center;
+    }
+    header h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+    header .last-updated { font-size: 0.75rem; color: var(--muted); margin-top: 8px; }
+
+    /* ── Main layout ── */
+    main { max-width: 900px; margin: 0 auto; padding: 24px 16px; }
+
+    /* ── Leaderboard ── */
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .leaderboard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .leaderboard table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .leaderboard thead th {
+      background: var(--surface2);
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .leaderboard thead th.center { text-align: center; }
+
+    .leaderboard tbody tr {
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .leaderboard tbody tr:last-child { border-bottom: none; }
+    .leaderboard tbody tr:hover { background: var(--surface2); }
+
+    .leaderboard tbody td {
+      padding: 12px 16px;
+      vertical-align: middle;
+    }
+    .leaderboard tbody td.center { text-align: center; }
+
+    .rank {
+      font-weight: 700;
+      color: var(--muted);
+      width: 36px;
+    }
+    .rank.top1 { color: #FFD700; }
+    .rank.top2 { color: #C0C0C0; }
+    .rank.top3 { color: #CD7F32; }
+
+    .participant-name {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .participant-name .avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .points-badge {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .mini-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .mini-badge.exact { background: var(--green-bg); color: var(--green-text); }
+    .mini-badge.result { background: var(--yellow-bg); color: var(--yellow-text); }
+
+    .view-link {
+      color: var(--accent);
+      font-size: 0.8rem;
+      text-decoration: none;
+      opacity: 0.6;
+    }
+    tr:hover .view-link { opacity: 1; }
+
+    /* ── Loading / empty state ── */
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: var(--muted);
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 780px;
+      margin: 20px auto;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .modal-header h2 { font-size: 1.1rem; font-weight: 700; }
+    .modal-header .modal-stats {
+      display: flex; gap: 16px;
+      font-size: 0.85rem;
+    }
+    .modal-header .stat { text-align: center; }
+    .modal-header .stat .val { font-size: 1.4rem; font-weight: 700; color: var(--accent); }
+    .modal-header .stat .lbl { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .modal-close {
+      background: none; border: none;
+      color: var(--muted); cursor: pointer;
+      font-size: 1.2rem; padding: 4px 8px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      margin-left: 16px;
+    }
+    .modal-close:hover { color: var(--text); background: var(--border); }
+
+    .modal-body { padding: 0; }
+
+    /* Group tabs */
+    .group-tabs {
+      display: flex; gap: 4px; padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      background: var(--surface);
+    }
+    .group-tab {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .group-tab.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+
+    /* Predictions table */
+    .predictions-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .predictions-table thead th {
+      padding: 8px 12px;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .predictions-table thead th.left { text-align: left; }
+
+    .predictions-table tbody tr {
+      border-bottom: 1px solid var(--border);
+    }
+    .predictions-table tbody tr:last-child { border-bottom: none; }
+    .predictions-table tbody td {
+      padding: 10px 12px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .predictions-table tbody td.left { text-align: left; }
+
+    .match-teams {
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+    .match-date { color: var(--muted); font-size: 0.72rem; margin-top: 2px; }
+
+    .score-cell {
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      min-width: 42px;
+      display: inline-block;
+    }
+    .score-cell.pending { color: var(--muted); }
+
+    .row-exact td { background: var(--green-bg) !important; }
+    .row-correct td { background: var(--yellow-bg) !important; }
+    .row-wrong td { background: var(--red-bg) !important; }
+
+    .pts-cell {
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+    .pts-cell.exact { color: var(--green-text); }
+    .pts-cell.correct { color: var(--yellow-text); }
+    .pts-cell.wrong { color: var(--red-text); }
+    .pts-cell.pending { color: var(--muted); }
+
+    .group-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* Legend */
+    .legend {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-dot {
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* Avatar colors */
+    .av0 { background: #1a3a5c; color: #5b9bd5; }
+    .av1 { background: #3a1a1a; color: #d55b5b; }
+    .av2 { background: #1a3a1a; color: #5bd55b; }
+    .av3 { background: #3a2a1a; color: #d5955b; }
+    .av4 { background: #2a1a3a; color: #955bd5; }
+    .av5 { background: #1a3a3a; color: #5bd5d5; }
+    .av6 { background: #3a3a1a; color: #d5d55b; }
+    .av7 { background: #3a1a3a; color: #d55bd5; }
+    .av8 { background: #1a2a3a; color: #5b95d5; }
+    .av9 { background: #3a2a2a; color: #d5955b; }
+    .av10 { background: #2a3a1a; color: #95d55b; }
+    .av11 { background: #1a3a2a; color: #5bd595; }
+    .av12 { background: #2a1a2a; color: #955b95; }
+    .av13 { background: #3a1a2a; color: #d55b95; }
+    .av14 { background: #2a3a3a; color: #5bb5d5; }
+
+    @media (max-width: 600px) {
+      .leaderboard thead th:nth-child(5),
+      .leaderboard tbody td:nth-child(5) { display: none; }
+      .modal-header { flex-wrap: wrap; gap: 12px; }
+      header h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚽ Polla <span>Mundial MBA 2026</span></h1>
+  <p>Fase de Grupos — Predice y Gana</p>
+  <div class="last-updated" id="last-updated"></div>
+</header>
+
+<main>
+  <p class="section-title">🏆 Tabla de Posiciones</p>
+  <div class="leaderboard" id="leaderboard">
+    <div class="loading">
+      <div class="spinner"></div>
+      Cargando resultados...
+    </div>
+  </div>
+
+  <p style="margin-top: 16px; font-size: 0.78rem; color: var(--muted); text-align:center;">
+    Haz clic en cualquier participante para ver sus predicciones detalladas.
+  </p>
+</main>
+
+<!-- Modal: individual participant predictions -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="modal-name"></h2>
+        <div class="modal-stats" id="modal-stats"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="group-tabs" id="group-tabs"></div>
+      <table class="predictions-table" id="predictions-table">
+        <thead>
+          <tr>
+            <th class="left">Partido</th>
+            <th>Tu Predicción</th>
+            <th>Resultado Real</th>
+            <th>Pts</th>
+          </tr>
+        </thead>
+        <tbody id="predictions-body"></tbody>
+      </table>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#0d2e1a;border:1px solid #238636"></span> Exacto (4 pts)</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#2d1f04;border:1px solid #9e6a03"></span> Resultado correcto (1 pt)</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#2d0f0f;border:1px solid #4a1515"></span> Incorrecto (0 pts)</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#21262d;border:1px solid #30363d"></span> Sin jugar</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─────────────────────────────── SCRIPTS ─────────────────────────────── -->
+
+<!-- 1. Your predictions data (generated by parse_spreadsheets.py) -->
+<script src="predictions.js"></script>
+
+<!-- 2. Firebase (compat SDK — no build step needed) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<!-- 3. Firebase config — REPLACE with your own values from Firebase Console -->
+<script>
+  const firebaseConfig = {
+    apiKey:            "AIzaSyDk0ulIH9jcazg6et2adDB1FVyOK6C3K9Y",
+    authDomain:        "world-cup-bracket-807b7.firebaseapp.com",
+    projectId:         "world-cup-bracket-807b7",
+    storageBucket:     "world-cup-bracket-807b7.firebasestorage.app",
+    messagingSenderId: "672760929245",
+    appId:             "1:672760929245:web:3edd19b5c58fcf38fe7434"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+<!-- 4. App logic -->
+<script>
+  // ── Scoring ────────────────────────────────────────────────────────────────
+  function getResult(home, away) {
+    if (home > away) return 'H';
+    if (home < away) return 'A';
+    return 'D';
+  }
+
+  function calcPoints(pred, real) {
+    if (real === null || real === undefined) return null; // not played
+    const { h: ph, a: pa } = pred;
+    const { homeGoals: rh, awayGoals: ra } = real;
+    if (ph === rh && pa === ra) return 4;           // exact score
+    if (getResult(ph, pa) === getResult(rh, ra)) return 1;  // correct result
+    return 0;
+  }
+
+  function classify(pts) {
+    if (pts === null) return 'pending';
+    if (pts === 4) return 'exact';
+    if (pts === 1) return 'correct';
+    return 'wrong';
+  }
+
+  // ── Utilities ──────────────────────────────────────────────────────────────
+  function initials(name) {
+    return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T12:00:00');
+    return d.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
+  }
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let realResults = {};   // { matchId: { homeGoals, awayGoals } }
+  let activeGroup = 'ALL';
+
+  // ── Render leaderboard ────────────────────────────────────────────────────
+  function computeParticipantStats(participant) {
+    let totalPts = 0, exact = 0, correct = 0;
+    for (const match of MATCHES) {
+      const pred = participant.predictions[match.id];
+      const real = realResults[match.id];
+      if (!pred || !real) continue;
+      const pts = calcPoints(pred, real);
+      if (pts === 4) { totalPts += 4; exact++; }
+      else if (pts === 1) { totalPts += 1; correct++; }
+    }
+    return { totalPts, exact, correct };
+  }
+
+  function renderLeaderboard() {
+    const ranked = PARTICIPANTS.map((p, i) => ({
+      ...p,
+      idx: i,
+      ...computeParticipantStats(p)
+    })).sort((a, b) =>
+      b.totalPts - a.totalPts ||
+      b.exact - a.exact ||
+      b.correct - a.correct
+    );
+
+    const tbody = ranked.map((p, rank) => {
+      const rankClass = rank === 0 ? 'rank top1' : rank === 1 ? 'rank top2' : rank === 2 ? 'rank top3' : 'rank';
+      const rankEmoji = rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : rank + 1;
+      return `
+        <tr onclick="openModal(${p.idx})">
+          <td class="${rankClass}">${rankEmoji}</td>
+          <td>
+            <div class="participant-name">
+              <div class="avatar av${p.idx % 15}">${initials(p.name)}</div>
+              ${p.name}
+            </div>
+          </td>
+          <td class="center"><span class="points-badge">${p.totalPts}</span></td>
+          <td class="center"><span class="mini-badge exact">⚽ ${p.exact}</span></td>
+          <td class="center"><span class="mini-badge result">✓ ${p.correct}</span></td>
+          <td class="center"><span class="view-link">Ver →</span></td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('leaderboard').innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th class="left">Participante</th>
+            <th class="center">Puntos</th>
+            <th class="center">Exactos</th>
+            <th class="center">Resultados</th>
+            <th class="center"></th>
+          </tr>
+        </thead>
+        <tbody>${tbody}</tbody>
+      </table>`;
+  }
+
+  // ── Modal ──────────────────────────────────────────────────────────────────
+  function openModal(idx) {
+    const participant = PARTICIPANTS[idx];
+    document.getElementById('modal-name').textContent = participant.name;
+    activeGroup = 'ALL';
+    renderModalContent(participant);
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function renderModalContent(participant) {
+    const stats = computeParticipantStats(participant);
+    document.getElementById('modal-stats').innerHTML = `
+      <div class="stat"><div class="val">${stats.totalPts}</div><div class="lbl">Puntos</div></div>
+      <div class="stat"><div class="val" style="color:var(--green-text)">${stats.exact}</div><div class="lbl">Exactos</div></div>
+      <div class="stat"><div class="val" style="color:var(--yellow-text)">${stats.correct}</div><div class="lbl">Resultados</div></div>
+    `;
+
+    // Group tabs
+    const groups = ['ALL', ...new Set(MATCHES.map(m => m.group).sort())];
+    document.getElementById('group-tabs').innerHTML = groups.map(g => `
+      <button class="group-tab ${g === activeGroup ? 'active' : ''}" onclick="switchGroup('${g}', ${PARTICIPANTS.indexOf(participant)})">${g === 'ALL' ? 'Todos' : 'Grupo ' + g}</button>
+    `).join('');
+
+    // Filtered matches
+    const filtered = activeGroup === 'ALL' ? MATCHES : MATCHES.filter(m => m.group === activeGroup);
+
+    const rows = filtered.map(match => {
+      const pred = participant.predictions[match.id];
+      const real = realResults[match.id];
+      const pts = pred ? calcPoints(pred, real) : null;
+      const cls = classify(pts);
+
+      const predScore = pred
+        ? `<span class="score-cell">${pred.h} – ${pred.a}</span>`
+        : `<span class="score-cell pending">–</span>`;
+
+      const realScore = real
+        ? `<span class="score-cell">${real.homeGoals} – ${real.awayGoals}</span>`
+        : `<span class="score-cell pending">?</span>`;
+
+      const ptsCell = pts === null
+        ? `<span class="pts-cell pending">–</span>`
+        : `<span class="pts-cell ${cls}">${pts}</span>`;
+
+      const rowClass = cls !== 'pending' ? `row-${cls}` : '';
+
+      return `
+        <tr class="${rowClass}">
+          <td class="left">
+            <div class="match-teams">${match.home} vs ${match.away}</div>
+            <div class="match-date">${formatDate(match.date)} · <span class="group-tag">Grupo ${match.group}</span></div>
+          </td>
+          <td>${predScore}</td>
+          <td>${realScore}</td>
+          <td>${ptsCell}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('predictions-body').innerHTML = rows;
+  }
+
+  function switchGroup(group, idx) {
+    activeGroup = group;
+    renderModalContent(PARTICIPANTS[idx]);
+  }
+
+  // ── Firebase: load real results ────────────────────────────────────────────
+  async function loadResults() {
+    try {
+      const snapshot = await db.collection('results').get();
+      realResults = {};
+      snapshot.forEach(doc => {
+        const id = parseInt(doc.id);
+        realResults[id] = doc.data();
+      });
+
+      if (snapshot.size > 0) {
+        const ts = new Date();
+        document.getElementById('last-updated').textContent =
+          `Actualizado: ${ts.toLocaleDateString('es-CL')} ${ts.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}`;
+      }
+    } catch (err) {
+      console.warn('Could not load results from Firebase:', err.message);
+      // Site works in read-only demo mode without Firebase
+    }
+    renderLeaderboard();
+  }
+
+  // ── Boot ────────────────────────────────────────────────────�

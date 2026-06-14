@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Polla Mundial MBA 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --accent: #f0b429;
+      --green-bg: #0d2e1a;
+      --green-text: #3fb950;
+      --radius: 8px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 700; }
+    header h1 span { color: var(--accent); }
+    header .header-actions { display: flex; gap: 8px; align-items: center; }
+
+    /* ── Login screen ── */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 60px);
+      padding: 24px;
+    }
+
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px;
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-card h2 { font-size: 1.3rem; margin-bottom: 6px; }
+    .login-card p { color: var(--muted); font-size: 0.88rem; margin-bottom: 28px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 0.95rem;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .btn-danger:hover { opacity: 0.9; }
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-full { width: 100%; }
+
+    .error-msg {
+      background: #2d0f0f;
+      border: 1px solid #6b1a1a;
+      color: #f85149;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      margin-top: 12px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    /* ── Admin panel ── */
+    #admin-panel { display: none; }
+
+    .admin-toolbar {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .admin-toolbar h2 { font-size: 0.95rem; font-weight: 600; flex: 1; }
+
+    .group-filter {
+      display: flex; gap: 4px; flex-wrap: wrap;
+    }
+    .gf-btn {
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .gf-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #000;
+    }
+
+    /* ── Matches grid ── */
+    main { padding: 20px 24px; max-width: 1000px; margin: 0 auto; }
+
+    .day-section { margin-bottom: 28px; }
+    .day-header {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .match-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+      transition: border-color 0.15s;
+    }
+    .match-card.has-result {
+      border-color: #238636;
+      background: var(--green-bg);
+    }
+    .match-card.has-result .save-btn { opacity: 0.5; }
+
+    .team-home { text-align: right; }
+    .team-away { text-align: left; }
+    .team-name {
+      font-weight: 700;
+      font-size: 0.88rem;
+    }
+    .team-meta {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .score-center {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .score-input {
+      width: 48px;
+      height: 40px;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 700;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      transition: border-color 0.15s;
+    }
+    .score-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .dash { color: var(--muted); font-weight: 700; font-size: 1.1rem; }
+
+    .save-btn {
+      padding: 6px 14px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+    .save-btn:hover { opacity: 0.85; }
+    .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 18px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      z-index: 999;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .toast.show { display: flex; animation: slideIn 0.2s ease; }
+    .toast.success { border-color: #238636; color: var(--green-text); }
+    .toast.error { border-color: #6b1a1a; color: #f85149; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .progress-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+    .progress-bar .bar {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+      min-width: 80px;
+    }
+    .progress-bar .fill {
+      height: 100%;
+      background: var(--green-text);
+      border-radius: 999px;
+      transition: width 0.3s;
+    }
+
+    @media (max-width: 600px) {
+      .match-card { grid-template-columns: 1fr; gap: 10px; }
+      .team-home, .team-away { text-align: left; }
+      .score-center { justify-content: flex-start; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ Admin — <span>Polla Mundial MBA 2026</span></h1>
+  <div class="header-actions" id="header-actions">
+    <!-- populated after login -->
+  </div>
+</header>
+
+<!-- ─── LOGIN SCREEN ────────────────────────────────────────────────────── -->
+<div id="login-screen">
+  <div class="login-card">
+    <h2>🔒 Acceso Admin</h2>
+    <p>Ingresa la contraseña para actualizar los resultados.</p>
+
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input type="password" id="pass-input" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') loginAdmin()" autofocus />
+    </div>
+
+    <button class="btn btn-primary btn-full" onclick="loginAdmin()">
+      Entrar
+    </button>
+
+    <div class="error-msg" id="login-error"></div>
+  </div>
+</div>
+
+<!-- ─── ADMIN PANEL ─────────────────────────────────────────────────────── -->
+<div id="admin-panel">
+  <div class="admin-toolbar">
+    <div>
+      <div style="font-weight:700; font-size:0.95rem;">Resultados de Partidos</div>
+      <div class="progress-bar" id="progress-bar" style="margin-top:6px;">
+        <div class="bar"><div class="fill" id="progress-fill" style="width:0%"></div></div>
+        <span id="progress-text">0 / 72 ingresados</span>
+      </div>
+    </div>
+    <div class="group-filter" id="group-filter"></div>
+  </div>
+  <main id="matches-container">
+    <div style="text-align:center; padding:48px; color:var(--muted);">
+      <div style="font-size:1.5rem; margin-bottom:8px;">⏳</div>
+      Cargando partidos...
+    </div>
+  </main>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- ─────────────────────────────── SCRIPTS ─────────────────────────────── -->
+
+<!-- 1. Predictions data -->
+<script src="predictions.js"></script>
+
+<!-- 2. Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+
+<!-- 3. Firebase config — REPLACE with your own values -->
+<script>
+  const firebaseConfig = {
+    apiKey:            "AIzaSyDk0ulIH9jcazg6et2adDB1FVyOK6C3K9Y",
+    authDomain:        "world-cup-bracket-807b7.firebaseapp.com",
+    projectId:         "world-cup-bracket-807b7",
+    storageBucket:     "world-cup-bracket-807b7.firebasestorage.app",
+    messagingSenderId: "672760929245",
+    appId:             "1:672760929245:web:3edd19b5c58fcf38fe7434"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+</script>
+
+<!-- 4. Admin logic -->
+<script>
+  let realResults = {};
+  let currentFilter = 'ALL';
+
+  // ── Auth ───────────────────────────────────────────────────────────────────
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      showAdminPanel(user);
+    }
+    // else: stay on login screen
+  });
+
+  // Shared admin account — one email, shared password
+  const ADMIN_EMAIL = 'admin@polla2026.com'; // matches the Firebase user you created
+
+  async function loginAdmin() {
+    const pass  = document.getElementById('pass-input').value;
+    const errEl = document.getElementById('login-error');
+    errEl.classList.remove('show');
+
+    if (!pass) {
+      errEl.textContent = 'Por favor ingresa la contraseña.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    try {
+      await auth.signInWithEmailAndPassword(ADMIN_EMAIL, pass);
+      // onAuthStateChanged will fire and show the panel
+    } catch (err) {
+      errEl.textContent = 'Error: ' + (err.code === 'auth/invalid-credential'
+        ? 'Email o contraseña incorrectos.'
+        : err.message);
+      errEl.classList.add('show');
+    }
+  }
+
+  async function logoutAdmin() {
+    await auth.signOut();
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-panel').style.display = 'none';
+    document.getElementById('header-actions').innerHTML = '';
+  }
+
+  function showAdminPanel(user) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    document.getElementById('header-actions').innerHTML = `
+      <span style="font-size:0.8rem;color:var(--muted);">Admin</span>
+      <button class="btn btn-ghost" onclick="logoutAdmin()">Cerrar sesión</button>
+    `;
+    loadResultsAndRender();
+  }
+
+  // ── Load results ───────────────────────────────────────────────────────────
+  async function loadResultsAndRender() {
+    try {
+      const snapshot = await db.collection('results').get();
+      realResults = {};
+      snapshot.forEach(doc => {
+        realResults[parseInt(doc.id)] = doc.data();
+      });
+    } catch (err) {
+      showToast('Error cargando resultados: ' + err.message, 'error');
+    }
+    renderGroupFilter();
+    renderMatches();
+  }
+
+  // ── Save result ────────────────────────────────────────────────────────────
+  async function saveResult(matchId, btn) {
+    const hInput = document.getElementById(`h-${matchId}`);
+    const aInput = document.getElementById(`a-${matchId}`);
+    const h = parseInt(hInput.value);
+    const a = parseInt(aInput.value);
+
+    if (isNaN(h) || isNaN(a) || h < 0 || a < 0) {
+      showToast('Ingresa marcadores válidos (0 o más)', 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+      await db.collection('results').doc(String(matchId)).set({
+        homeGoals: h,
+        awayGoals: a,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      realResults[matchId] = { homeGoals: h, awayGoals: a };
+
+      // Update card appearance
+      const card = document.getElementById(`card-${matchId}`);
+      if (card) card.classList.add('has-result');
+
+      updateProgress();
+      showToast('✓ Guardado', 'success');
+    } catch (err) {
+      showToast('Error guardando: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar';
+    }
+  }
+
+  async function deleteResult(matchId) {
+    if (!confirm('¿Eliminar este resultado?')) return;
+    try {
+      await db.collection('results').doc(String(matchId)).delete();
+      delete realResults[matchId];
+
+      const hInput = document.getElementById(`h-${matchId}`);
+      const aInput = document.getElementById(`a-${matchId}`);
+      if (hInput) hInput.value = '';
+      if (aInput) aInput.value = '';
+
+      const card = document.getElementById(`card-${matchId}`);
+      if (card) card.classList.remove('has-result');
+
+      updateProgress();
+      showToast('Resultado eliminado', 'success');
+    } catch (err) {
+      showToast('Error: ' + err.message, 'error');
+    }
+  }
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+  function renderGroupFilter() {
+    const groups = ['ALL', ...new Set(MATCHES.map(m => m.group).sort())];
+    document.getElementById('group-filter').innerHTML = groups.map(g => `
+      <button class="gf-btn ${g === currentFilter ? 'active' : ''}"
+        onclick="setFilter('${g}')">${g === 'ALL' ? 'Todos' : g}</button>
+    `).join('');
+  }
+
+  function setFilter(group) {
+    currentFilter = group;
+    renderGroupFilter();
+    renderMatches();
+  }
+
+  function renderMatches() {
+    const filtered = currentFilter === 'ALL'
+      ? MATCHES
+      : MATCHES.filter(m => m.group === currentFilter);
+
+    // Group by date
+    const byDate = {};
+    filtered.forEach(m => {
+      const d = m.date || 'Sin fecha';
+      if (!byDate[d]) byDate[d] = [];
+      byDate[d].push(m);
+    });
+
+    const formatDateLong = (dateStr) => {
+      if (!dateStr || dateStr === 'Sin fecha') return dateStr;
+      const d = new Date(dateStr + 'T12:00:00');
+      return d.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+    };
+
+    const html = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, matches]) => `
+      <div class="day-section">
+        <div class="day-header">📅 ${formatDateLong(date)}</div>
+        ${matches.map(m => renderMatchCard(m)).join('')}
+      </div>
+    `).join('');
+
+    document.getElementById('matches-container').innerHTML = html;
+    updateProgress();
+  }
+
+  function renderMatchCard(match) {
+    const r = realResults[match.id];
+    const hasResult = r !== undefined && r !== null;
+
+    return `
+      <div class="match-card ${hasResult ? 'has-result' : ''}" id="card-${match.id}">
+        <div class="team-home">
+          <div class="team-name">${match.home}</div>
+          <div class="team-meta">Grupo ${match.group} · ${match.stadium}</div>
+        </div>
+
+        <div class="score-center">
+          <input type="number" class="score-input" id="h-${match.id}"
+            min="0" max="99" placeholder="–"
+            value="${hasResult ? r.homeGoals : ''}"
+            onkeydown="if(event.key==='Enter') document.getElementById('save-${match.id}').click()" />
+          <span class="dash">–</span>
+          <input type="number" class="score-input" id="a-${match.id}"
+            min="0" max="99" placeholder="–"
+            value="${hasResult ? r.awayGoals : ''}"
+            onkeydown="if(event.key==='Enter') document.getElementById('save-${match.id}').click()" />
+          <button class="save-btn" id="save-${match.id}"
+            onclick="saveResult(${match.id}, this)">
+            ${hasResult ? '✓ Ok' : 'Guardar'}
+          </button>
+          ${hasResult ? `<button class="save-btn" style="background:#6b1a1a;color:#f85149;" onclick="deleteResult(${match.id})">✕</button>` : ''}
+        </div>
+
+        <div class="team-away">
+          <div class="team-name">${match.away}</div>
+        </div>
+      </div>`;
+  }
+
+  function updateProgress() {
+    const entered = Object.keys(realResults).length;
+    const total = 72;
+    const pct = Math.round((entered / total) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = `${entered} / ${total} ingresados`;
+  }
+
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+  }
+</script>
+</body>
+</html>
+                                                                                                                                                                                             
