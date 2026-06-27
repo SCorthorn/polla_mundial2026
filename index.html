@@ -26,8 +26,8 @@ header p{color:var(--mt);margin-top:3px;font-size:.85rem}.upd{font-size:.72rem;c
 .rank{font-weight:700;color:var(--mt);width:36px}
 .rank.r1{color:#FFD700}.rank.r2{color:#C0C0C0}.rank.r3{color:#CD7F32}
 .pname{font-weight:600;display:flex;align-items:center;gap:8px}
-.av{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex-shrink:0}
-.av0{background:#1a3a5c;color:#5b9bd5}.av1{background:#3a1a1a;color:#d55b5b}.av2{background:#1a3a1a;color:#5bd55b}.av3{background:#3a2a1a;color:#d5955b}.av4{background:#2a1a3a;color:#955bd5}.av5{background:#1a3a3a;color:#5bd5d5}.av6{background:#3a3a1a;color:#d5d55b}.av7{background:#3a1a3a;color:#d55bd5}.av8{background:#1a2a3a;color:#5b95d5}.av9{background:#3a2a2a;color:#d5955b}.av10{background:#2a3a1a;color:#95d55b}.av11{background:#1a3a2a;color:#5bd595}.av12{background:#2a1a2a;color:#955b95}.av13{background:#3a1a2a;color:#d55b95}.av14{background:#2a3a3a;color:#5bb5d5}.av15{background:#3a1a00;color:var(--ac)}
+.pav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;flex-shrink:0}
+.pav0{background:#1a3a5c;color:#5b9bd5}.pav1{background:#3a1a1a;color:#d55b5b}.pav2{background:#1a3a1a;color:#5bd55b}.pav3{background:#3a2a1a;color:#d5955b}.pav4{background:#2a1a3a;color:#955bd5}.pav5{background:#1a3a3a;color:#5bd5d5}.pav6{background:#3a3a1a;color:#d5d55b}.pav7{background:#3a1a3a;color:#d55bd5}.pav8{background:#1a2a3a;color:#5b95d5}.pav9{background:#3a2a2a;color:#d5955b}.pav10{background:#2a3a1a;color:#95d55b}.pav11{background:#1a3a2a;color:#5bd595}.pav12{background:#2a1a2a;color:#955b95}.pav13{background:#3a1a2a;color:#d55b95}.pav14{background:#2a3a3a;color:#5bb5d5}.pav15{background:#3a1a00;color:var(--ac)}
 .pts{font-size:1.1rem;font-weight:700;color:var(--ac)}
 .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.78rem;font-weight:600}
 .badge.ex{background:var(--gbg);color:var(--gtx)}.badge.re{background:var(--ybg);color:var(--ytx)}
@@ -61,9 +61,9 @@ header p{color:var(--mt);margin-top:3px;font-size:.85rem}.upd{font-size:.72rem;c
 .li{display:flex;align-items:center;gap:6px}.ld{width:10px;height:10px;border-radius:2px;flex-shrink:0}
 .awards-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px}
 .award-card{background:var(--sf2);border:1px solid var(--bd);border-radius:6px;padding:10px 14px}
-.award-card .ak{font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
-.award-card .av2{font-size:.95rem;font-weight:700;color:var(--tx)}
-.award-card .apts{font-size:.7rem;color:var(--ac);margin-top:2px}
+.award-card .award-lbl{font-size:.7rem;color:var(--mt);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.award-card .award-val{font-size:.95rem;font-weight:700;color:var(--tx)}
+.award-card .award-pts{font-size:.7rem;color:var(--ac);margin-top:2px}
 .stats-layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - var(--hdr));overflow:hidden}
 .left-col{border-right:1px solid var(--bd);overflow-y:auto;padding:14px 12px}
 .right-col{overflow-y:auto;padding:14px 12px}
@@ -180,19 +180,17 @@ var AWARD_CONFIG=[
   {key:'topScorer',label:'Goleador',pts:'25pts'},{key:'bestPlayer',label:'Mejor Jugador',pts:'25pts'},
   {key:'bestGoalkeeper',label:'Mejor Arquero',pts:'20pts'},{key:'bestU21',label:'Mejor Sub-21',pts:'10pts'}
 ];
-/* Alias map: normalized (lowercase) → canonical display name */
 var AWARD_ALIASES={
   'espana':'España','españa':'España',
   'kylian mbappe':'Mbappé','mbappe':'Mbappé','mbappé':'Mbappé','kylian mbappé':'Mbappé',
-  'harry kane':'Harry Kane','kane':'Harry Kane','harry kane':'Harry Kane',
+  'harry kane':'Harry Kane','kane':'Harry Kane',
   'lamine yamal':'Lamine Yamal','yamal':'Lamine Yamal','lamine':'Lamine Yamal',
   'unai simón':'Unai Simón','unai simon':'Unai Simón'
 };
 function normAward(v){var k=v.trim().toLowerCase();return AWARD_ALIASES[k]||v.trim();}
 
 var results={};var koMatches=[];var koPredictions={};var actualAwards={};
-var ALL_MATCHES=[];var ALL_PARTICIPANTS=[];var sortedMatches=[];
-var activeTab='lb';
+var ALL_MATCHES=[];var ALL_PARTICIPANTS=[];var sortedMatches=[];var activeTab='lb';
 
 function isMobile(){return window.innerWidth<=680;}
 function switchTab(t){
@@ -243,7 +241,6 @@ function buildData(){
   });
 }
 
-/* ── Leaderboard ── */
 function statFor(p){
   var tot=0,ex=0,co=0;
   ALL_MATCHES.forEach(function(m){
@@ -263,12 +260,11 @@ function renderLB(){
   var rows=ranked.map(function(p,rank){
     var rc=rank===0?'rank r1':rank===1?'rank r2':rank===2?'rank r3':'rank';
     var re=rank===0?'&#129351;':rank===1?'&#129352;':rank===2?'&#129353;':rank+1;
-    return'<tr onclick="openMod(\''+encodeURIComponent(p.name)+'\')"><td class="'+rc+'">'+re+'</td><td><div class="pname"><div class="av av'+(p.idx%16)+'">'+ini(p.name)+'</div>'+p.name+'</div></td><td class="c"><span class="pts">'+p.tot+'</span></td><td class="c"><span class="badge ex">&#9917; '+p.ex+'</span></td><td class="c"><span class="badge re">&#10003; '+p.co+'</span></td><td class="c"><span class="vl">Ver &rarr;</span></td></tr>';
+    return'<tr onclick="openMod(\''+encodeURIComponent(p.name)+'\')"><td class="'+rc+'">'+re+'</td><td><div class="pname"><div class="pav pav'+(p.idx%16)+'">'+ini(p.name)+'</div>'+p.name+'</div></td><td class="c"><span class="pts">'+p.tot+'</span></td><td class="c"><span class="badge ex">&#9917; '+p.ex+'</span></td><td class="c"><span class="badge re">&#10003; '+p.co+'</span></td><td class="c"><span class="vl">Ver &rarr;</span></td></tr>';
   }).join('');
   document.getElementById('lb').innerHTML='<table><thead><tr><th>#</th><th>Participante</th><th class="c">Puntos</th><th class="c">Exactos</th><th class="c">Resultados</th><th class="c"></th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
-/* ── Modal ── */
 var modName='';var modGrp='ALL';
 function openMod(enc){
   modName=decodeURIComponent(enc);modGrp='ALL';
@@ -295,15 +291,12 @@ function renderMod(){
   document.getElementById('gtabs').innerHTML=tabs.map(function(t){
     return'<button class="gtab'+(t.k===modGrp?' active':'')+'" onclick="switchModGrp(\''+t.k+'\')">'+t.l+'</button>';
   }).join('');
-
   if(modGrp==='AWARDS'){renderAwardsTab(p);return;}
-
   var filtered;
   if(modGrp==='ALL')filtered=ALL_MATCHES;
   else if(modGrp==='GROUP')filtered=ALL_MATCHES.filter(function(m){return(m.round||'GROUP')==='GROUP';});
   else if(modGrp.startsWith('GRP_'))filtered=ALL_MATCHES.filter(function(m){return m.group===modGrp.slice(4);});
   else filtered=ALL_MATCHES.filter(function(m){return m.round===modGrp;});
-
   var rows=filtered.map(function(m){
     var pred=p.predictions[m.id];
     var real=results[m.id];
@@ -327,13 +320,12 @@ function renderAwardsTab(p){
   AWARD_CONFIG.forEach(function(cfg){
     var raw=(aw[cfg.key]||'').trim();
     var val=raw?normAward(raw):'&mdash;';
-    html+='<div class="award-card"><div class="ak">'+cfg.label+'</div><div class="av2">'+val+'</div><div class="apts">'+cfg.pts+'</div></div>';
+    html+='<div class="award-card"><div class="award-lbl">'+cfg.label+'</div><div class="award-val">'+val+'</div><div class="award-pts">'+cfg.pts+'</div></div>';
   });
   html+='</div>';
   document.getElementById('modal-body').innerHTML=html;
 }
 
-/* ── Stats tab ── */
 var statsGrp='ALL';var selectedMatchId=null;var activePill=null;var VOTERS_MAP={};
 
 function buildFilters(){
@@ -435,7 +427,6 @@ function showStats(matchId){
   bkts.D.sort(function(a,b){return parseInt(a.score)-parseInt(b.score)||b.count-a.count;});
   bkts.A.sort(function(a,b){return b.count-a.count;});
   var maxC=Math.max.apply(null,Object.values(sm).map(function(v){return v.length;}).concat([1]));
-
   function pills(arr,cls2,col){
     if(!arr.length)return'<div class="no-votes">Sin votos</div>';
     return arr.map(function(e){
@@ -501,22 +492,21 @@ function toggleVoters(matchId,score){
   }
 }
 
-/* ── Firebase load ── */
 async function loadAll(){
-  try{
-    var [rSnap,koSnap,kpSnap,awDoc]=await Promise.all([
-      db.collection('results').get(),
-      db.collection('ko_matches').get(),
-      db.collection('ko_predictions').get(),
-      db.collection('settings').doc('awards').get()
-    ]);
+  try{var rSnap=await db.collection('results').get();
     rSnap.forEach(function(doc){results[parseInt(doc.id)]=doc.data();});
+    if(rSnap.size>0){var t=new Date();document.getElementById('upd').textContent='Actualizado: '+t.toLocaleDateString('es-CL')+' '+t.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});}
+  }catch(e){console.warn('results:',e.message);}
+  try{var koSnap=await db.collection('ko_matches').get();
     koSnap.forEach(function(doc){koMatches.push(doc.data());});
     koMatches.sort(function(a,b){return a.id-b.id;});
+  }catch(e){console.warn('ko_matches:',e.message);}
+  try{var kpSnap=await db.collection('ko_predictions').get();
     kpSnap.forEach(function(doc){koPredictions[doc.id]=doc.data();});
+  }catch(e){console.warn('ko_predictions:',e.message);}
+  try{var awDoc=await db.collection('settings').doc('awards').get();
     if(awDoc.exists)actualAwards=awDoc.data();
-    if(rSnap.size>0){var t=new Date();document.getElementById('upd').textContent='Actualizado: '+t.toLocaleDateString('es-CL')+' '+t.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});}
-  }catch(e){console.warn('Firebase:',e.message);}
+  }catch(e){console.warn('awards:',e.message);}
   buildData();renderLB();buildFilters();buildMatchList();
 }
 loadAll();
